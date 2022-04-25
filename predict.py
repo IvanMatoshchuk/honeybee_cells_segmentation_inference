@@ -15,9 +15,20 @@ def get_args():
         required=False,
         choices=["unet-effnetb0", "unet-mobilenetv3", "unet-resnet18", "manet-effnetb0"],
     )
-    parser.add_argument("--inference", action="store_true", help="run the process of inference")
-    parser.add_argument("--gpu", action="store_true", help="use gpu for inference")
+    parser.add_argument(
+        "--source", type=str, help="specify path to folder with image(s)", default="data/images", required=False
+    )
 
+    parser.add_argument(
+        "--output-path",
+        type=str,
+        help="specify path to output folder for storing inferred masks",
+        default="data/inferred_masks",
+        required=False,
+    )
+    parser.add_argument(
+        "--config-path", type=str, help="specify path to config", default="config/config.yaml", required=False
+    )
     parser.add_argument(
         "--gpu_num",
         type=int,
@@ -25,6 +36,15 @@ def get_args():
         default=0,
         required=False,
         choices=get_gpus_choices(),
+    )
+
+    parser.add_argument("--inference", action="store_true", help="run the process of inference")
+    parser.add_argument("--gpu", action="store_true", help="use gpu for inference")
+    parser.add_argument(
+        "-sw",
+        "--sliding-window",
+        action="store_true",
+        help="use sliding window inference, parameters are read from config",
     )
 
     results = parser.parse_args()

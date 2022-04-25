@@ -7,10 +7,10 @@ from torch.utils.data import Dataset
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
-project_path = Path(__file__).parent.parent.parent.parent
+project_path = Path(__file__).parent.parent.parent
 
 
-class CustomTestDataset(Dataset):
+class CustomDataset(Dataset):
     def __init__(self, images_path: str = "data/images"):
         self.images_folder = os.path.join(project_path, images_path)
 

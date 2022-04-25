@@ -7,7 +7,7 @@ from torch import Tensor
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 
-project_path = Path(__file__).parent.parent.parent.parent
+project_path = Path(__file__).parent.parent.parent
 
 mapping_dict = {"effnetb0": "efficientnet-b0", "mobilenetv3": "timm-mobilenetv3_small_100", "resnet18": "resnet18"}
 
