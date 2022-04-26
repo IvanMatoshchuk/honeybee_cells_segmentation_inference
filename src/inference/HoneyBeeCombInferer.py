@@ -1,14 +1,11 @@
-from optparse import Option
 import os
 from pathlib import Path
-from statistics import mode
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 import torch
-import torch.nn as nn
 from monai.inferers import SlidingWindowInferer
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -32,14 +29,21 @@ output_folder_for_masks_default = os.path.join(project_path, "data", "inferred_m
 class HoneyBeeCombInferer:
     def __init__(
         self,
-        path_to_images: str,
         model_name: str,
+        path_to_images: Optional[str] = None,
         config_path: str = config_path_default,
         label_classes_path: str = label_classes_path_default,
         sw_inference: bool = True,
         device: str = "cpu",
         output_folder_for_masks: str = output_folder_for_masks_default,
     ):
+        """
+        class for performing semantic segmentation of honey bee comb
+
+        Arguments:
+            - model_name:
+
+        """
 
         self.path_to_images = path_to_images
         self.device = device
@@ -56,10 +60,11 @@ class HoneyBeeCombInferer:
 
     def infer(self, image: Union[Tensor, np.array, str], return_logits: bool = False) -> Tensor:
 
-        if isinstance(image, str):
-            image = cv2.imread(image, 0)
+        image = self._check_type_and_read_image_from_str(image)
 
         image = self.preprocess_raw_image(image).to(self.device)
+        if len(image.size()) < 4:
+            image = image.unsqueeze(0)
 
         if self.sw_inferer:
             inferred_logits = self.sw_inferer(image, self.model)
@@ -151,18 +156,27 @@ class HoneyBeeCombInferer:
 
         return torch.argmax(inferred_logits_pred, dim=0)
 
+    def _check_type_and_read_image_from_str(self, image: Union[str, np.ndarray, Tensor]) -> Union[np.ndarray, Tensor]:
+
+        if isinstance(image, str):
+            return cv2.imread(image, 0)
+        else:
+            return image
+
     def plot_prediction(
         self,
         pred: Tensor,
-        input_image: Optional[np.ndarray] = None,
+        input_image: Optional[Union[np.ndarray, str]] = None,
         mask: Optional[np.ndarray] = None,
     ) -> None:
 
         label_processed = np.array([[self.cmap[int(i)] for i in j] for j in tqdm(pred)])
 
         if input_image is not None and mask is not None:
-            fig, ax = plt.subplots(3, 1, figsize=(40, 35))
-            ax[0].imshow(input_image)
+            fig, ax = plt.subplots(3, 1, figsize=(36, 28))
+
+            input_image = self._check_type_and_read_image_from_str(input_image)
+            ax[0].imshow(input_image, cmap="gray")
             ax[0].set_title("input image")
 
             ax[1].imshow(label_processed)
@@ -172,22 +186,23 @@ class HoneyBeeCombInferer:
             ax[2].imshow(mask_processed)
             ax[2].set_title("ground truth")
 
-        elif input_image is None or mask is not None:
-            fig, ax = plt.subplots(2, 1, figsize=(40, 35))
+        elif input_image is not None or mask is not None:
+            fig, ax = plt.subplots(1, 2, figsize=(36, 28))
 
             if input_image is not None:
-                ax[0].imshow(input_image)
+                input_image = self._check_type_and_read_image_from_str(input_image)
+                ax[0].imshow(input_image, cmap="gray")
                 ax[0].set_title("input image")
             elif mask is not None:
                 mask_processed = np.array([[self.cmap[i] for i in j] for j in tqdm(mask)])
-                ax[0].imshow(input_image)
+                ax[0].imshow(input_image, cmap="gray")
                 ax[0].set_title("input image")
 
             ax[1].imshow(label_processed)
             ax[1].set_title("predicted")
 
         else:
-            fig, ax = plt.subplots(1, 1, figsize=(24, 20))
+            fig, ax = plt.subplots(1, 1, figsize=(28, 20))
 
             ax.imshow(label_processed)
             ax.set_title("predicted")

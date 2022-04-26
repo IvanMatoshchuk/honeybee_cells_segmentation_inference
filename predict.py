@@ -1,19 +1,28 @@
 import os
 import argparse
+import logging
 from src.utils.utils import get_gpus_choices
+from src.infer import run_inference
+
+logging.basicConfig(format="%(name)s:%(levelname)s:%(message)s ")
+log = logging.getLogger(name=os.path.basename(__file__))
+log.setLevel(logging.INFO)
 
 
 def get_args():
 
-    parser = argparse.ArgumentParser(description="Segmentation of Honey Bee Comb")
+    parser = argparse.ArgumentParser(
+        description="Segmentation of Honey Bee Comb",
+        epilog="By default processes all images in 'data/images' folder and outputs in 'data/inferred_masks'",
+    )
     parser.add_argument(
         "-m",
-        "--model",
+        "--model-name",
         type=str,
         help="choose segmentation model",
-        default="unet-effnetb0",
+        default="unet_effnetb0",
         required=False,
-        choices=["unet-effnetb0", "unet-mobilenetv3", "unet-resnet18", "manet-effnetb0"],
+        choices=["unet_effnetb0", "unet_mobilenetv3", "unet_resnet18", "manet_effnetb0"],
     )
     parser.add_argument(
         "--source", type=str, help="specify path to folder with image(s)", default="data/images", required=False
@@ -38,7 +47,6 @@ def get_args():
         choices=get_gpus_choices(),
     )
 
-    parser.add_argument("--inference", action="store_true", help="run the process of inference")
     parser.add_argument("--gpu", action="store_true", help="use gpu for inference")
     parser.add_argument(
         "-sw",
@@ -51,10 +59,22 @@ def get_args():
     return results
 
 
+def check_n_images(path: str) -> int:
+
+    return len(os.listdir(path))
+
+
 def main():
 
     args = get_args()
-    print(args)
+    log.info(args)
+
+    log.info(f"Images in folder: {check_n_images(args.source)}")
+
+    # run_inference(args)
+
+    run_inference(args)
+
     return
 
 
