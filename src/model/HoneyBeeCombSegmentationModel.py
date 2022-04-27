@@ -1,19 +1,16 @@
 import os
-from pathlib import Path
 
 import torch
 from torch import Tensor
 import segmentation_models_pytorch as smp
 
-project_path = Path(__file__).parent.parent.parent
-
 mapping_dict = {"effnetb0": "efficientnet-b0", "mobilenetv3": "timm-mobilenetv3_small_100", "resnet18": "resnet18"}
 
 
 class HoneyBeeCombSegmentationModel:
-    def __init__(self, model_name: str, device: str = "cpu"):
+    def __init__(self, model_name: str, path_to_pretrained_models: str, device: str = "cpu"):
 
-        self.model = self.get_model_by_name(model_name)
+        self.model = self.get_model_by_name(model_name, path_to_pretrained_models)
 
         self.model.to(device)
         self.model.eval()
@@ -23,12 +20,12 @@ class HoneyBeeCombSegmentationModel:
 
         return self.model(x)
 
-    def get_model_by_name(self, model_name: str) -> torch.nn.Module:
+    def get_model_by_name(self, model_name: str, path_to_pretrained_models: str) -> torch.nn.Module:
         """
         initiates model from segmentation_models_pytorch package and loads pre-trained state-dict
         """
 
-        path_to_state_dict = os.path.join(project_path, "models", model_name + ".pth")
+        path_to_state_dict = os.path.join(path_to_pretrained_models, model_name + ".pth")
         state_dict = torch.load(path_to_state_dict)
 
         architecture, encoder = model_name.split("_")
