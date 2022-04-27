@@ -37,6 +37,13 @@ def get_args():
         required=False,
     )
     parser.add_argument(
+        "--models-path",
+        type=str,
+        help="specify path to pretrained models' state-dicts",
+        default="models",
+        required=False,
+    )
+    parser.add_argument(
         "--config-path", type=str, help="specify path to config.yaml", default="config/config.yaml", required=False
     )
 

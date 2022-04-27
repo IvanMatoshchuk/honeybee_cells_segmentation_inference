@@ -24,17 +24,19 @@ project_path = Path(__file__).parent.parent.parent
 config_path_default = os.path.join(project_path, "config", "config.yaml")
 label_classes_path_default = os.path.join(project_path, "data", "label_classes.json")
 output_folder_for_masks_default = os.path.join(project_path, "data", "inferred_masks")
+path_to_pretrained_models_default = os.path.join(project_path, "models")
 
 
 class HoneyBeeCombInferer:
     def __init__(
         self,
         model_name: str,
-        config_path: str = config_path_default,
-        label_classes_path: str = label_classes_path_default,
         sw_inference: bool = True,
         device: str = "cpu",
+        config_path: str = config_path_default,
+        label_classes_path: str = label_classes_path_default,
         output_folder_for_masks: str = output_folder_for_masks_default,
+        path_to_pretrained_models: str = path_to_pretrained_models_default,
     ):
         """
         class for performing semantic segmentation of honey bee comb
@@ -51,7 +53,9 @@ class HoneyBeeCombInferer:
         self.config = read_config(config_path)
         self.cmap, self.patches = get_cmap_and_labels_for_plotting(label_classes_path)
 
-        self.model = HoneyBeeCombSegmentationModel(model_name=model_name, device=device)
+        self.model = HoneyBeeCombSegmentationModel(
+            model_name=model_name, device=device, path_to_pretrained_models=path_to_pretrained_models
+        )
 
         if sw_inference:
             self.sw_inferer = SlidingWindowInferer(**self.config["sliding_window_inferer"])
