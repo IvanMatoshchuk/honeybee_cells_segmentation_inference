@@ -14,7 +14,7 @@ class CustomDataset(Dataset):
     def __init__(self, images_path: str = "data/images"):
         self.images_folder = os.path.join(project_path, images_path)
 
-        self.images = [i for i in os.listdir(self.images_folder) if not i.startswith(".")]
+        self.images = [i for i in os.listdir(self.images_folder) if i != "README.md"]
         self.transforms = self.get_transforms()
 
     def get_transforms(self) -> A.core.composition.Compose:

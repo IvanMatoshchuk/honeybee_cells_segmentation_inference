@@ -2,7 +2,8 @@ import os
 import argparse
 import logging
 from src.utils.utils import get_gpus_choices
-from src.infer import run_inference
+from src.run_inference import run_inference
+
 
 logging.basicConfig(format="%(name)s:%(levelname)s:%(message)s ")
 log = logging.getLogger(name=os.path.basename(__file__))
@@ -36,8 +37,17 @@ def get_args():
         required=False,
     )
     parser.add_argument(
-        "--config-path", type=str, help="specify path to config", default="config/config.yaml", required=False
+        "--config-path", type=str, help="specify path to config.yaml", default="config/config.yaml", required=False
     )
+
+    parser.add_argument(
+        "--label-classes-path",
+        type=str,
+        help="specify path to label_classes.json (from hasty.ai)",
+        default="data/label_classes.json",
+        required=False,
+    )
+
     parser.add_argument(
         "--gpu_num",
         type=int,
@@ -47,7 +57,7 @@ def get_args():
         choices=get_gpus_choices(),
     )
 
-    parser.add_argument("--gpu", action="store_true", help="use gpu for inference")
+    parser.add_argument("-g", "--gpu", action="store_true", help="use gpu for inference")
     parser.add_argument(
         "-sw",
         "--sliding-window",

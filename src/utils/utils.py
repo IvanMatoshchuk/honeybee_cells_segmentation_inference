@@ -1,6 +1,9 @@
 import yaml
+from yaml.loader import SafeLoader
+
 import json
 import numpy as np
+import random
 
 from PIL import ImageColor
 import matplotlib.patches as mpatches
@@ -19,7 +22,7 @@ def get_gpus_choices() -> List[int]:
 def read_config(config_path: str) -> dict:
 
     stream = open(config_path, "r")
-    config = yaml.load(stream)
+    config = yaml.load(stream, Loader=SafeLoader)
 
     return config
 
@@ -29,6 +32,18 @@ def read_label_classes(label_classes_path: str) -> dict:
     with open(label_classes_path, "r") as f:
         label_classes = json.load(f)
     return label_classes
+
+
+def seed_everything(seed: int) -> None:
+
+    """
+    For reproducibility
+    """
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 
 def get_cmap_and_labels_for_plotting(label_classes_path: str) -> Tuple[dict, List[mpatches.Patch]]:
