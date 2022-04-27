@@ -1,0 +1,13 @@
+random_seed: 123 # used for reproducibility 
+
+dataloader:
+  batch_size: 4
+  pin_memory: True
+  num_workers: 8
+  drop_last: False
+
+
+sliding_window_inferer:
+  roi_size: 512 # same value will be used for width and height, i. e. roi_size = (512,512)
+  overlap: 0.4
+  mode: "gaussian" 

@@ -1,0 +1,1 @@
+Inferred masks are saved in this folder.
