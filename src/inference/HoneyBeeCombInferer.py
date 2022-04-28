@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import cv2
 import numpy as np
@@ -91,7 +91,7 @@ class HoneyBeeCombInferer:
 
         return None
 
-    def infer_without_bees(self, images_path: str) -> None:
+    def infer_without_bees(self, images_path: str, img_size=Tuple[int, int]) -> None:
 
         dataset = CustomDataset(images_path)
         dataloader = DataLoader(dataset=dataset, **self.config["dataloader"])
@@ -120,25 +120,35 @@ class HoneyBeeCombInferer:
 
         output_means.append(output.mean(dim=0))
 
-        return self._get_mask_no_bees(output_means)
+        return self._get_mask_no_bees(output_means, img_size)
 
     def _get_mask(self, inferred_logits: Tensor) -> Tensor:
 
-        return torch.argmax(inferred_logits.squeeze(), dim=0).detach().cpu().numpy()
+        inferred_mask = torch.argmax(inferred_logits.squeeze(), dim=0).detach().cpu().numpy()
 
-    def _get_mask_no_bees(self, inferred_logits_means: Tensor) -> Tensor:
+        return np.pad(inferred_mask, ((0, self.diff_height), (0, self.diff_width)))
+
+    def _get_mask_no_bees(self, inferred_logits_means: Tensor, img_size: Tuple[int, int]) -> Tensor:
 
         inferred_logits_pred = torch.stack(inferred_logits_means)
         inferred_logits_pred = inferred_logits_pred.mean(dim=0)
 
         inferred_logits_pred = torch.softmax(inferred_logits_pred, dim=0).clone()
+        inferred_mask = torch.argmax(inferred_logits_pred, dim=0).detach().cpu().numpy()
 
-        return torch.argmax(inferred_logits_pred, dim=0).detach().cpu().numpy()
+        diff_height = img_size[0] - inferred_mask.shape[0]
+        diff_width = img_size[1] - inferred_mask.shape[1]
+
+        return np.pad(inferred_mask, ((0, diff_height), (0, diff_width)))
 
     def preprocess_raw_image(self, image: np.array) -> Tensor:
 
         height = image.shape[0] // 32 * 32
         width = image.shape[1] // 32 * 32
+
+        self.diff_height = image.shape[0] - height
+        self.diff_width = image.shape[1] - width
+
         image = image[:height, :width]
 
         transformation = self.get_transforms()
