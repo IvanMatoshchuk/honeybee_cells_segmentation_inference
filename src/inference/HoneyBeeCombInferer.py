@@ -62,11 +62,14 @@ class HoneyBeeCombInferer:
 
         seed_everything(self.config["random_seed"])
 
-    def infer(self, image: Union[Tensor, np.array, str], return_logits: bool = False) -> Tensor:
+    def infer(
+        self, image: Union[Tensor, np.array, str], return_logits: bool = False, pad_to_input_size: bool = True
+    ) -> Tensor:
 
         image = self._check_type_and_read_image_from_str(image)
         if isinstance(image, np.ndarray):
-            image = self.preprocess_raw_image(image).to(self.device)
+            image, diff_in_dims = self.preprocess_raw_image(image)
+            image = image.to(self.device)
         if len(image.size()) < 4:
             image = image.unsqueeze(0)
 
@@ -78,20 +81,30 @@ class HoneyBeeCombInferer:
         if return_logits:
             return inferred_logits
         else:
-            return self._get_mask(inferred_logits)
+            inferred_mask = self._get_mask(inferred_logits)
+
+            if pad_to_input_size:
+                return self._pad_mask_to_input_dim(
+                    inferred_mask, diff_height=diff_in_dims[0], diff_width=diff_in_dims[1]
+                )
+            else:
+                return inferred_mask
 
     def infer_batch(self, images_path: str) -> None:
 
         dataset = CustomDataset(images_path)
 
-        for image, image_path in tqdm(dataset):
-            inferred_mask = self.infer(image.to(self.device))
+        for image, image_path, diff_in_dims in tqdm(dataset):
+            inferred_mask = self.infer(image.to(self.device), pad_to_input_size=False)
+            inferred_mask = self._pad_mask_to_input_dim(
+                inferred_mask, diff_height=diff_in_dims[0], diff_width=diff_in_dims[1]
+            )
 
             self._save_batch_inference(inferred_mask, image_path)
 
         return None
 
-    def infer_without_bees(self, images_path: str, img_size=Tuple[int, int]) -> None:
+    def infer_without_bees(self, images_path: str) -> None:
 
         dataset = CustomDataset(images_path)
         dataloader = DataLoader(dataset=dataset, **self.config["dataloader"])
@@ -100,7 +113,7 @@ class HoneyBeeCombInferer:
         output = 0
         c = 0
 
-        for image, image_path in tqdm(dataloader):
+        for image, image_path, diff_in_dims in tqdm(dataloader):
             inferred_logits = torch.softmax(
                 self.infer(image.to(self.device), return_logits=True).detach(), dim=1
             ).cpu()
@@ -119,16 +132,21 @@ class HoneyBeeCombInferer:
             c += 1
 
         output_means.append(output.mean(dim=0))
+        inferred_mask = self._get_mask_no_bees(output_means)
 
-        return self._get_mask_no_bees(output_means, img_size)
+        diff_in_dims = torch.stack(diff_in_dims)
+        diff_height = int(diff_in_dims[0, 0])
+        diff_width = int(diff_in_dims[1, 0])
+
+        return self._pad_mask_to_input_dim(inferred_mask, diff_height=diff_height, diff_width=diff_width)
 
     def _get_mask(self, inferred_logits: Tensor) -> Tensor:
 
         inferred_mask = torch.argmax(inferred_logits.squeeze(), dim=0).detach().cpu().numpy()
 
-        return np.pad(inferred_mask, ((0, self.diff_height), (0, self.diff_width)))
+        return inferred_mask
 
-    def _get_mask_no_bees(self, inferred_logits_means: Tensor, img_size: Tuple[int, int]) -> Tensor:
+    def _get_mask_no_bees(self, inferred_logits_means: Tensor) -> Tensor:
 
         inferred_logits_pred = torch.stack(inferred_logits_means)
         inferred_logits_pred = inferred_logits_pred.mean(dim=0)
@@ -136,24 +154,25 @@ class HoneyBeeCombInferer:
         inferred_logits_pred = torch.softmax(inferred_logits_pred, dim=0).clone()
         inferred_mask = torch.argmax(inferred_logits_pred, dim=0).detach().cpu().numpy()
 
-        diff_height = img_size[0] - inferred_mask.shape[0]
-        diff_width = img_size[1] - inferred_mask.shape[1]
+        return inferred_mask
+
+    def _pad_mask_to_input_dim(self, inferred_mask, diff_height: int, diff_width: int) -> np.ndarray:
 
         return np.pad(inferred_mask, ((0, diff_height), (0, diff_width)))
 
-    def preprocess_raw_image(self, image: np.array) -> Tensor:
+    def preprocess_raw_image(self, image: np.array) -> Union[Tensor, Tuple[int, int]]:
 
         height = image.shape[0] // 32 * 32
         width = image.shape[1] // 32 * 32
 
-        self.diff_height = image.shape[0] - height
-        self.diff_width = image.shape[1] - width
+        diff_height = image.shape[0] - height
+        diff_width = image.shape[1] - width
 
         image = image[:height, :width]
 
         transformation = self.get_transforms()
 
-        return transformation(image=image)["image"]
+        return transformation(image=image)["image"], (diff_height, diff_width)
 
     def get_transforms(self) -> A.core.composition.Compose:
 
