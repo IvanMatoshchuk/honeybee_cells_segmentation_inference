@@ -31,12 +31,17 @@ class CustomDataset(Dataset):
 
         height = image.shape[0] // 32 * 32
         width = image.shape[1] // 32 * 32
+
+        # save difference in dims for further interpolation of the mask to the same dim as input
+        diff_height = image.shape[0] - height
+        diff_width = image.shape[1] - width
+
         image = image[:height, :width]
 
         transformation = self.transforms(image=image)
         img_aug = transformation["image"]
 
-        return img_aug, img_path
+        return img_aug, img_path, (diff_height, diff_width)
 
     def __len__(self) -> int:
         return len(self.images)
