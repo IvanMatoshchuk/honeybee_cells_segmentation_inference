@@ -1,4 +1,4 @@
-from src.inference.HoneyBeeCombInferer import HoneyBeeCombInferer
+from honeybee_comb_inferer.inference.HoneyBeeCombInferer import HoneyBeeCombInferer
 
 
 def run_inference(args):
