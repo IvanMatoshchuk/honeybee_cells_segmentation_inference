@@ -1,6 +1,12 @@
 # honey_bee_segmentation_inference
 Inference pipeline for performing segmentation of honey bee comb.
 
+## Installation:
+
+inside the repository: `pip install -e .`
+
+## Example:
+
 ```python
 from honeybee_comb_inferer.inference.HoneyBeeCombInferer import HoneyBeeCombInferer
 
