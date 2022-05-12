@@ -20,10 +20,16 @@ def get_args():
         "-m",
         "--model-name",
         type=str,
-        help="choose segmentation model",
+        help="specify name of the segmentation model (should be in 'models' folder)",
         default="unet_effnetb0",
         required=False,
-        choices=["unet_effnetb0", "unet_mobilenetv3", "unet_resnet18", "manet_effnetb0"],
+    )
+    parser.add_argument(
+        "--models-path",
+        type=str,
+        help="specify path to pretrained models' state-dicts",
+        default="models",
+        required=False,
     )
     parser.add_argument(
         "--source", type=str, help="specify path to folder with image(s)", default="data/images", required=False
@@ -36,13 +42,7 @@ def get_args():
         default="data/inferred_masks",
         required=False,
     )
-    parser.add_argument(
-        "--models-path",
-        type=str,
-        help="specify path to pretrained models' state-dicts",
-        default="models",
-        required=False,
-    )
+
     parser.add_argument(
         "--config-path", type=str, help="specify path to config.yaml", default="config/config.yaml", required=False
     )
