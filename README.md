@@ -1,6 +1,6 @@
 # honey_bee_segmentation_inference
 Inference pipeline for performing segmentation of honey bee comb.
-
+Pipeline can be used for infering all images in the specified folder (execution via command line) or used as a package in python scripts.
 
 ## Installation:
 
@@ -22,9 +22,10 @@ pred = model.infer(image = path_to_image)
 print(pred.shape)
 
 ```
+Cab be used via command line:
+Infering masks for all images in the specified folder:
+- `python infer.py`. To list information about input arguments run `python infer.py -h`
 
-=======
-Pipeline can be used for infering all images in the specified folder (execution via command line) or used as a package in python scripts.
 
 
 ### Setup ###
@@ -34,8 +35,7 @@ Built with python 3.9.2
 
 ### Usage ###
 
-Infering masks for all images in the specified folder:
-- `python infer.py`. To list information about input arguments run `python infer.py -h`
+
 
 Usage as a package in python script:
 - `from .. import ..`
