@@ -16,9 +16,9 @@ from albumentations.pytorch.transforms import ToTensorV2
 import matplotlib.pyplot as plt
 
 
-from src.dataset.CustomDataset import CustomDataset
-from src.model.HoneyBeeCombSegmentationModel import HoneyBeeCombSegmentationModel
-from src.utils.utils import read_config, get_cmap_and_labels_for_plotting, seed_everything
+from honeybee_comb_inferer.dataset.CustomDataset import CustomDataset
+from honeybee_comb_inferer.model.HoneyBeeCombSegmentationModel import HoneyBeeCombSegmentationModel
+from honeybee_comb_inferer.utils.utils import read_config, get_cmap_and_labels_for_plotting, seed_everything
 
 project_path = Path(__file__).parent.parent.parent
 config_path_default = os.path.join(project_path, "config", "config.yaml")

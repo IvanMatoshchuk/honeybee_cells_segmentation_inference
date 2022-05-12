@@ -1,8 +1,8 @@
 import os
 import argparse
 import logging
-from src.utils.utils import get_gpus_choices
-from src.run_inference import run_inference
+from honeybee_comb_inferer.utils.utils import get_gpus_choices
+from honeybee_comb_inferer.run_inference import run_inference
 
 
 logging.basicConfig(format="%(name)s:%(levelname)s:%(message)s ")
@@ -81,18 +81,16 @@ def check_n_images(path: str) -> int:
     return len(os.listdir(path))
 
 
-def main():
+def main() -> None:
 
     args = get_args()
     log.info(args)
 
     log.info(f"Images in folder: {check_n_images(args.source)}")
 
-    # run_inference(args)
-
     run_inference(args)
 
-    return
+    return None
 
 
 if __name__ == "__main__":
