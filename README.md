@@ -2,6 +2,8 @@
 Inference pipeline for performing segmentation of honey bee comb.
 Pipeline can be used for infering all images in the specified folder (execution via command line) or used as a package in python scripts.
 
+Pre-trained models can be downloaded from: https://www.dropbox.com/sh/2b8vcr0mwdsqwpb/AACLDpQ1F8Qxt-1zR_MY_NeJa?dl=0
+
 ## Installation:
 
 inside the repository: `pip install -e .`
