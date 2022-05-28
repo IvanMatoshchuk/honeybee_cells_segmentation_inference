@@ -185,6 +185,7 @@ class HoneyBeeCombInferer:
         inferred_logits[:, 1, ...] = 0
         inferred_logits[:, 0, ...] *= 0.35
         inferred_logits[:, 2, ...] *= 0.9
+        inferred_logits[:, 8, ...] *= 0.1
 
         return inferred_logits
 
