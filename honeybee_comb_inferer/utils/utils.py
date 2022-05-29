@@ -1,15 +1,13 @@
-import yaml
-from yaml.loader import SafeLoader
-
 import json
-import numpy as np
 import random
+from typing import List, Tuple, Union
 
-from PIL import ImageColor
 import matplotlib.patches as mpatches
-
-from typing import List, Tuple
+import numpy as np
 import torch
+import yaml
+from PIL import ImageColor
+from yaml.loader import SafeLoader
 
 
 def get_gpus_choices() -> List[int]:
@@ -46,10 +44,36 @@ def seed_everything(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
-def get_cmap_and_labels_for_plotting(label_classes_path: str) -> Tuple[dict, List[mpatches.Patch]]:
+def get_label_class_mapping(label_classes_config: Union[str, List[dict]]) -> dict:
+    # read label classes config (extracted from hasty.ai after labeling)
+    if isinstance(label_classes_config, str):
+        label_classes = read_label_classes(label_classes_config)
+    elif isinstance(label_classes_config, list):
+        label_classes = label_classes_config
+    else:
+        raise Exception(
+            f"label_classes_config should be of type <str> or <list>, but you provided type <{type(label_classes_config)}>"
+        )
+
+    label_class_mapping = {}
+    for i in label_classes:
+        label_class_mapping[i["png_index"]] = i["name"]
+    return label_class_mapping
+
+
+def get_cmap_and_labels_for_plotting(
+    label_classes_config: Union[str, List[dict]]
+) -> Tuple[dict, List[mpatches.Patch]]:
 
     # read label classes config (extracted from hasty.ai after labeling)
-    label_classes = read_label_classes(label_classes_path)
+    if isinstance(label_classes_config, str):
+        label_classes = read_label_classes(label_classes_config)
+    elif isinstance(label_classes_config, list):
+        label_classes = label_classes_config
+    else:
+        raise Exception(
+            f"label_classes_config should be of type <str> or <list>, but you provided type <{type(label_classes_config)}>"
+        )
 
     # prepare labels and colors
     cmap = {}

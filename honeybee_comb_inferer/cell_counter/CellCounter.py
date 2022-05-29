@@ -1,11 +1,13 @@
 import time
-from typing import Tuple
+from typing import Tuple, Union, List
 
 import cv2
 import numpy as np
 import skimage
 from scipy import ndimage
 from skimage.feature import peak_local_max
+from honeybee_comb_inferer.config import label_classes_default
+from honeybee_comb_inferer.utils.utils import get_label_class_mapping
 
 
 class CellCounter:
@@ -22,9 +24,15 @@ class CellCounter:
             method to use for counting of cells. Either 'edt' (Euclidean Distance Transform) or 'cht' (Circle Hough Transform).
     """
 
-    def __init__(self, inferred_mask: np.ndarray, method: str = "edt"):
+    def __init__(
+        self,
+        inferred_mask: np.ndarray,
+        method: str = "edt",
+        label_classes_config: Union[str, List[dict]] = label_classes_default,
+    ):
         self.inferred_mask = inferred_mask
         self.method = method
+        self.label_classes_mapping = get_label_class_mapping(label_classes_config)
 
     def run_counter(self) -> dict:
         """
@@ -56,10 +64,10 @@ class CellCounter:
             distance_map, thresh = self._get_distance_map_and_binarized_image(mask=temp_mask, label=label)
 
             local_max = peak_local_max(distance_map, min_distance=35, labels=thresh)
-            output[label] = local_max.shape[0]
+            output[self.label_classes_mapping[label]] = local_max.shape[0]
             total_num_cells += local_max.shape[0]
         end = time.time()
-        print("Time taken: ", f"{round(start - end, 3)} sec.")
+        print("Time taken: ", f"{round(end - start, 3)} sec.")
         print(f"Total number of cells: {total_num_cells}")
         return output
 
@@ -85,10 +93,10 @@ class CellCounter:
                 normalize=True,
             )
 
-            output[label] = cx.shape[0]
+            output[self.label_classes_mapping[label]] = cx.shape[0]
             total_num_cells += cx.shape[0]
         end = time.time()
-        print("Time taken: ", f"{round(start - end, 3)} sec.")
+        print("Time taken: ", f"{round(end - start, 3)} sec.")
         print(f"Total number of cells: {total_num_cells}")
         return output
 

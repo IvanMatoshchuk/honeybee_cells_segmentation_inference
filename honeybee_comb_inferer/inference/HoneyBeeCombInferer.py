@@ -1,39 +1,20 @@
-import os
-import sys
-from pathlib import Path
-from typing import Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
+import albumentations as A
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
 import torch
+from albumentations.pytorch.transforms import ToTensorV2
 from monai.inferers import SlidingWindowInferer
 from torch import Tensor
 from torch.utils.data import DataLoader
-import albumentations as A
-from albumentations.pytorch.transforms import ToTensorV2
+from tqdm import tqdm
 
-
-import matplotlib.pyplot as plt
-
-
+from honeybee_comb_inferer.config import config_default, label_classes_default
 from honeybee_comb_inferer.dataset.CustomDataset import CustomDataset
 from honeybee_comb_inferer.model.HoneyBeeCombSegmentationModel import HoneyBeeCombSegmentationModel
-from honeybee_comb_inferer.utils.utils import read_config, get_cmap_and_labels_for_plotting, seed_everything
-
-# project_path = Path(__file__).parent.parent.parent
-# config_path_default = os.path.join(project_path, "config", "config.yaml")
-# label_classes_path_default = os.path.join(project_path, "data", "label_classes.json")
-
-config_default_path = os.path.join(sys.prefix, "config-honeybee-comb")
-label_classes_default_path = os.path.join(sys.prefix, "label-classes")
-
-
-# config_default = {
-#     "random_seed": 123,
-#     "dataloader": {"batch_size": 4, "pin_memory": True, "num_workers": 8, "drop_last": False},
-#     "sliding_window_inferer": {"roi_size": 512, "overlap": 0.4, "mode": "gaussian"},
-# }
+from honeybee_comb_inferer.utils.utils import get_cmap_and_labels_for_plotting, read_config, seed_everything
 
 
 class HoneyBeeCombInferer:
@@ -41,8 +22,8 @@ class HoneyBeeCombInferer:
         self,
         model_name: str,
         path_to_pretrained_models: str,
-        label_classes_path: str = label_classes_default_path,
-        config: Union[str, dict] = config_default_path,
+        label_classes_config: Union[str, List[dict]] = label_classes_default,
+        config: Union[str, dict] = config_default,
         sw_inference: bool = True,
         device: str = "cpu",
     ):
@@ -56,9 +37,9 @@ class HoneyBeeCombInferer:
                 Should be located in 'path_to_pretrained_models'.
             path_to_pretrained_models: str
                 path where 'model_name' is located
-            label_classes_path: str
-                path to json extracted from 'hasty.ai' including classes and colors (used for plotting).
-                Default path is "data/label_classes.json"
+            label_classes_config: Union[str, List[dict]]
+                path to json or read json extracted from 'hasty.ai' including classes and colors (used for plotting).
+                Default is read from "data/label_classes.json". List of dicts.
             config: Union[str, dict]
                 path or dictionary config, which includes parameters for dataloader and sliding-window inference.
             sw_inference: bool
@@ -77,7 +58,7 @@ class HoneyBeeCombInferer:
 
         self.config = self._get_config(config)
 
-        self.cmap, self.patches = get_cmap_and_labels_for_plotting(label_classes_path)
+        self.cmap, self.patches = get_cmap_and_labels_for_plotting(label_classes_config)
 
         self.model = HoneyBeeCombSegmentationModel(
             model_name=model_name, device=device, path_to_pretrained_models=path_to_pretrained_models
@@ -293,4 +274,6 @@ class HoneyBeeCombInferer:
         elif isinstance(config, dict):
             return config
         else:
-            raise Exception(f"'config' should be of type <str> (path) or <dict>. You provided type <{type(config)}>")
+            raise Exception(
+                f"'config' should be of type <str> (path) or <dict>, but you provided type <{type(config)}>"
+            )
