@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from typing import Optional, Union, Tuple
 
@@ -20,37 +21,62 @@ from honeybee_comb_inferer.dataset.CustomDataset import CustomDataset
 from honeybee_comb_inferer.model.HoneyBeeCombSegmentationModel import HoneyBeeCombSegmentationModel
 from honeybee_comb_inferer.utils.utils import read_config, get_cmap_and_labels_for_plotting, seed_everything
 
-project_path = Path(__file__).parent.parent.parent
-config_path_default = os.path.join(project_path, "config", "config.yaml")
-label_classes_path_default = os.path.join(project_path, "data", "label_classes.json")
-output_folder_for_masks_default = os.path.join(project_path, "data", "inferred_masks")
-path_to_pretrained_models_default = os.path.join(project_path, "models")
+# project_path = Path(__file__).parent.parent.parent
+# config_path_default = os.path.join(project_path, "config", "config.yaml")
+# label_classes_path_default = os.path.join(project_path, "data", "label_classes.json")
+
+config_default_path = os.path.join(sys.prefix, "config-honeybee-comb")
+label_classes_default_path = os.path.join(sys.prefix, "label-classes")
+
+
+# config_default = {
+#     "random_seed": 123,
+#     "dataloader": {"batch_size": 4, "pin_memory": True, "num_workers": 8, "drop_last": False},
+#     "sliding_window_inferer": {"roi_size": 512, "overlap": 0.4, "mode": "gaussian"},
+# }
 
 
 class HoneyBeeCombInferer:
     def __init__(
         self,
         model_name: str,
+        path_to_pretrained_models: str,
+        label_classes_path: str = label_classes_default_path,
+        config: Union[str, dict] = config_default_path,
         sw_inference: bool = True,
         device: str = "cpu",
-        config_path: str = config_path_default,
-        label_classes_path: str = label_classes_path_default,
-        output_folder_for_masks: str = output_folder_for_masks_default,
-        path_to_pretrained_models: str = path_to_pretrained_models_default,
     ):
         """
         class for performing semantic segmentation of honey bee comb
 
-        Arguments:
-            - model_name:
+        Parameters
+        ----------
+            model_name: str
+                filename of the pretrained model to be used for inference.
+                Should be located in 'path_to_pretrained_models'.
+            path_to_pretrained_models: str
+                path where 'model_name' is located
+            label_classes_path: str
+                path to json extracted from 'hasty.ai' including classes and colors (used for plotting).
+                Default path is "data/label_classes.json"
+            config: Union[str, dict]
+                path or dictionary config, which includes parameters for dataloader and sliding-window inference.
+            sw_inference: bool
+                boolean value (True/False) whether to apply sliding-window inference.
+            device: str
+                on which device should inference run, pytorch format: 'cpu','cuda','cuda:1'.
 
+        Example usage:
+            >>> from honeybee_comb_inferer.inference import HoneyBeeCombInferer
+            >>> model = HoneyBeeCombInferer(model_name = 'model-name', path_to_pretrained_models = 'path-to-pretrained-models', device = 'cuda')
+            >>> model.infer(image = 'path-to-image')
         """
 
         self.device = device
         self.sw_inferer = sw_inference
-        self.output_folder_for_masks = output_folder_for_masks
 
-        self.config = read_config(config_path)
+        self.config = self._get_config(config)
+
         self.cmap, self.patches = get_cmap_and_labels_for_plotting(label_classes_path)
 
         self.model = HoneyBeeCombSegmentationModel(
@@ -259,3 +285,12 @@ class HoneyBeeCombInferer:
         plt.close(fig)
 
         return None
+
+    def _get_config(self, config: Union[str, dict]) -> dict:
+
+        if isinstance(config, str):
+            return read_config(config)
+        elif isinstance(config, dict):
+            return config
+        else:
+            raise Exception(f"'config' should be of type <str> (path) or <dict>. You provided type <{type(config)}>")

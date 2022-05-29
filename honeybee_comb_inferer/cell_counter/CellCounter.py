@@ -1,10 +1,11 @@
-import cv2
 import time
 from typing import Tuple
+
+import cv2
+import numpy as np
+import skimage
 from scipy import ndimage
 from skimage.feature import peak_local_max
-
-import numpy as np
 
 
 class CellCounter:
@@ -15,15 +16,25 @@ class CellCounter:
 
     Parameters
     ----------
-
-
+        inferred_mask: np.ndarray
+            output of HoneyBeeInferer.infer_without_bees. Mask made from images filmed in short time.
+        method: str
+            method to use for counting of cells. Either 'edt' (Euclidean Distance Transform) or 'cht' (Circle Hough Transform).
     """
 
     def __init__(self, inferred_mask: np.ndarray, method: str = "edt"):
         self.inferred_mask = inferred_mask
         self.method = method
 
-    def run_counter(self):
+    def run_counter(self) -> dict:
+        """
+        main function for counting individual cells
+
+        Output
+        ------
+            output: dict
+                dictionary containing label -> count mapping.
+        """
         if self.method == "edt":
             output = self._run_edt()
         elif self.method == "cht":
@@ -53,7 +64,33 @@ class CellCounter:
         return output
 
     def _run_cht(self):
-        pass
+        output = {}
+        start = time.time()
+        total_num_cells = 0
+
+        # hard-coded radious, since distance to camera is the same for all images
+        radius = 48.0 / 2.0
+        radius_range = np.arange(int(radius * 0.75), int(radius * 1.25))
+
+        for label in np.unique(self.inferred_mask)[1:]:
+            temp_mask = self.inferred_mask.astype("uint8").copy()
+
+            cell_borders, thresh = self._get_cell_border_and_binarized_image(mask=temp_mask, label=label)
+            hough = skimage.transform.hough_circle(cell_borders, radius=radius_range)
+            accum, cx, cy, rad = skimage.transform.hough_circle_peaks(
+                hough,
+                radii=radius_range,
+                min_xdistance=int(1.5 * radius),
+                min_ydistance=int(1.5 * radius),
+                normalize=True,
+            )
+
+            output[label] = cx.shape[0]
+            total_num_cells += cx.shape[0]
+        end = time.time()
+        print("Time taken: ", f"{round(start - end, 3)} sec.")
+        print(f"Total number of cells: {total_num_cells}")
+        return output
 
     def _get_distance_map_and_binarized_image(self, mask: np.ndarray, label: int) -> Tuple[np.ndarray, np.ndarray]:
 
@@ -62,3 +99,11 @@ class CellCounter:
         distance_map = ndimage.distance_transform_edt(thresh)
 
         return distance_map, thresh
+
+    def _get_cell_border_and_binarized_image(self, mask: np.ndarray, label: int) -> Tuple[np.ndarray, np.ndarray]:
+
+        mask[mask != label] = 0
+        thresh = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        cell_borders = skimage.feature.canny(thresh)
+
+        return cell_borders, thresh

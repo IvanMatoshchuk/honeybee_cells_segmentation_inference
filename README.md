@@ -11,7 +11,7 @@ inside the repository: `pip install -e .`
 ## Example:
 
 ```python
-from honeybee_comb_inferer.inference.HoneyBeeCombInferer import HoneyBeeCombInferer
+from honeybee_comb_inferer.inference import HoneyBeeCombInferer
 
 model_name = "unet_effnetb0"
 device = "cuda:3"
