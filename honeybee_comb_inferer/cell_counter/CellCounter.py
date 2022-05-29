@@ -71,7 +71,7 @@ class CellCounter:
         print(f"Total number of cells: {total_num_cells}")
         return output
 
-    def _run_cht(self):
+    def _run_cht(self) -> dict:
         output = {}
         start = time.time()
         total_num_cells = 0

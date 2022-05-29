@@ -98,6 +98,11 @@ class HoneyBeeCombInferer:
                 return inferred_mask
 
     def infer_batch(self, images_path: str) -> None:
+        """
+        Function for inferring batch of images. Used for running via the command line to increase speed.
+        Saves each inferred mask in the folder 'inferred_masks', which is located parallel to folder with images.
+        Each mask will have the same name as the corresponding image used for inference.
+        """
 
         dataset = CustomDataset(images_path)
 

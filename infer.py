@@ -36,14 +36,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "--output-path",
-        type=str,
-        help="specify path to output folder for storing inferred masks",
-        default="data/inferred_masks",
-        required=False,
-    )
-
-    parser.add_argument(
         "--config-path", type=str, help="specify path to config.yaml", default="config/config.yaml", required=False
     )
 
