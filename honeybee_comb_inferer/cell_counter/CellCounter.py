@@ -22,6 +22,9 @@ class CellCounter:
             output of HoneyBeeInferer.infer_without_bees. Mask made from images filmed in short time.
         method: str
             method to use for counting of cells. Either 'edt' (Euclidean Distance Transform) or 'cht' (Circle Hough Transform).
+        label_classes_config: Union[str, List[dict]]
+            path to json or read json extracted from 'hasty.ai' including classes and colors (used for plotting).
+            Default is read from "data/label_classes.json". List of dicts.
     """
 
     def __init__(

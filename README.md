@@ -1,6 +1,6 @@
 # Segmentation of Honey Bee Comb
 Inference pipeline for performing segmentation of honey bee comb and counting of individual cells.\
-Pipeline can be used for infering all images in the specified folder (execution via command line) or used as a package in python scripts.
+Pipeline can be used for inferring all images in the specified folder (execution via command line) or used as a package in python scripts.
 
 Pre-trained models can be downloaded from: https://www.dropbox.com/sh/2b8vcr0mwdsqwpb/AACLDpQ1F8Qxt-1zR_MY_NeJa?dl=0
 
@@ -39,9 +39,9 @@ cell_counter.run_counter()
 ```
 
 ## Running from the command line:
-Process can be run via the command line for infering masks for all images in the specified folder.\
-For inferring images located in default folder ("data\images")
+Process can be run via the command line for inferring masks for all images in the specified folder.\
+For inferring images located in the default folder ("data\images")
 - `python infer.py`. 
 
-To list information about input arguments run 
+To list information about input arguments: 
 - `python infer.py -h`
