@@ -33,7 +33,7 @@ inferred_mask_without_bees = model.infer_without_bees(path_to_close_frames)
 ```python
 from honeybee_comb_inferer.cell_counter import CellCounter
 
-cell_counter = CellCounter(inferred_mask=inferred_mask_without_bees, method = "edt")
+cell_counter = CellCounter(inferred_mask = inferred_mask_without_bees, method = "edt")
 
 cell_counter.run_counter()
 ```
