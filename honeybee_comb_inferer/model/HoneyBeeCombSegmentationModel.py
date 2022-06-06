@@ -27,12 +27,13 @@ class HoneyBeeCombSegmentationModel:
 
         path_to_state_dict = os.path.join(path_to_pretrained_models, model_name + ".pth")
         state_dict = torch.load(path_to_state_dict)
+        state_dict_adjusted = {k.replace("model.", ""): v for k, v in state_dict.items()}
 
         architecture, encoder = model_name.split("_")
         encoder = mapping_dict[encoder]
 
         model = self._setup_model(architecture, encoder)
-        model.load_state_dict(state_dict)
+        model.load_state_dict(state_dict_adjusted)
 
         return model
 
